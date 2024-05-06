@@ -67,7 +67,7 @@ function animate() {
     window.requestAnimationFrame(animate);
     return;
   }
-  frameTime = currentTime;
+  currentTime = frameTime;
 
   ctx.clearRect(0, 0, innerWidth, innerHeight);
   for (let j = 0; j < lines.length; j++) {
