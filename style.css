@@ -1,8 +1,28 @@
 body {
+  width: 100vw;
+  height: 100vh;
   margin: 0;
   overflow: hidden;
   background: #000;
+  position: relative;
+  background-image: linear-gradient(to bottom, rgb(84, 84, 253) 0%, rgb(160, 160, 250) 50%, rgb(70, 70, 207) 51.5%, rgb(70, 70, 207) 100%);
 }
+
 canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+#rayCanvas {
+  filter: blur(5px);
+  z-index: 10;
+}
+
+#seaCanvas {
+  z-index: -10;
+}
+
+#cloudCanvas {
   filter: blur(4px);
 }
