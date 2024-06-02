@@ -4,6 +4,11 @@
 /*                           */
 /*****************************/
 
+
+///////////////////////////
+//         Scene         //
+///////////////////////////
+
 // a helper class to manage the various canvas elements that will be used
 class SceneCanvas {
   constructor(elementId) {
@@ -14,6 +19,11 @@ class SceneCanvas {
     this.ctx = this.canvas.getContext('2d');  // get a drawing context from the HTML canvas
   }
 }
+
+
+/////////////////////////
+//         Ray         //
+/////////////////////////
 
 // the rays shooting from the sea
 class Ray {
@@ -32,7 +42,7 @@ class Ray {
   reset() {
     this.speed = 0.2 + Math.random() * 0.8;   // the angular velocity of the ray
     this.mainColor = this.chooseColor();      // calls the chooseColor helper to pick a random yellowish hue
-    this.length = 80 + Math.round(Math.random() * ((Math.min(_w, _h)) * (2/3)));  // the total length of the ray
+    this.length = 80 * window.devicePixelRatio + Math.round(Math.random() * ((Math.min(_w, _h)) * (2/3)));  // the total length of the ray
     this.type = Math.random() < 0.5 ? 0 : 1;  // a clockwise (1) or counterclockwise (0) ray
     this.r = this.type == 0 ? -10 : 190;      // randomly sets the starting angle based on type
   }
@@ -70,6 +80,11 @@ class Ray {
   }
 }
 
+
+//////////////////////////
+//         Wave         //
+//////////////////////////
+
 // the wave class for randomized, bezier-based, triangle-ish waves
 class Wave {
   constructor() {
@@ -100,13 +115,13 @@ class Wave {
     }
 
     // adjust the wave's timer by the framerate-adjusted speed
-    this.timer += this.timerDir * frameSpeedFactor * this.timerSpeed;
+    this.timer += this.timerDir * frameSpeedFactor;
   }
 
   // resets the wave's properties
   reset() {
     this.yOffset = Math.round(Math.random() * (_h * (3/7)));  // sets the wave's offset, which is applied to screen height * 4/7 + yOffset
-    this.heightFactor = (_h - this.yOffset) / _h;             // lets farther waves appear smaller and last longer
+    this.heightFactor = 1 - ((_h - this.yOffset) / _h);             // lets farther waves appear smaller and last longer
     
     // the timer properties simultaneously control the wave's drawing time and lifetime
     this.timer = 0 - Math.random() * 60;
@@ -115,10 +130,11 @@ class Wave {
 
     this.x = (Math.random() * (_w + 200)) - 100;  // sets the wave's x value to somewhere between to 100 pixels to the left or right max of the screen
     this.y = (_h * (4/7)) + this.yOffset;   // locks the wave to 4/7 or greater of the screen height
-    this.xSpeed = 0.66;
+    this.xSpeed = 0.5 * (window.devicePixelRatio / 2);
     this.ySpeed = this.xSpeed / 4;
 
-    this.width = 150 - (125 * this.heightFactor * this.heightFactor);   // the wave width is a function of its y position (lower == bigger)
+    let baseLength = 125 * window.devicePixelRatio
+    this.width = baseLength * this.heightFactor;   // the wave width is a function of its y position (lower == bigger)
     this.height = this.width / 3;
 
     // instantly retry any wave whose width is negative
@@ -151,6 +167,11 @@ class Wave {
     }
   }
 }
+
+
+///////////////////////////////
+//         CloudBank         //
+///////////////////////////////
 
 // a helper/container class to manage cloud cells
 class CloudBank {
@@ -213,13 +234,18 @@ class CloudBank {
   }
 }
 
+
+///////////////////////////////
+//         CloudCell         //
+///////////////////////////////
+
 // the cloud cells are mainly just helper objects to easily access x/y and radius information
 class CloudCell {
   constructor(xPos, xRadius) {
     this.x = xPos;
     this.xRadius = xRadius;
     this.yRadius = xRadius / 2;
-    this.y = ((_h / 2) - 10) - this.yRadius;  // cloud cells are always offset from the middle of the screen by 10 pixels up
+    this.y = ((_h / 2) - (10 * window.devicePixelRatio)) - this.yRadius;  // cloud cells are always offset from the middle of the screen by 10 pixels up
   }
 }
 
@@ -230,8 +256,8 @@ class CloudCell {
 /*****************************/
 
 // globals to contain the window dimensions
-let _w = window.innerWidth;
-let _h = window.innerHeight;
+let _w = window.innerWidth * window.devicePixelRatio;
+let _h = window.innerHeight * window.devicePixelRatio;
 
 // scales the entire scene to match the ideal conditions, as calculated from the original development screen dimensions
 let _scale = Math.min(_w / 1500, _h / 950);
@@ -240,6 +266,10 @@ let _scale = Math.min(_w / 1500, _h / 950);
 let rayCanvas = new SceneCanvas('rayCanvas');
 let seaCanvas = new SceneCanvas('seaCanvas');
 let cloudCanvas = new SceneCanvas('cloudCanvas');
+
+// set css values for ray and cloud blur here
+rayCanvas.canvas.style.filter = `blur(${5 / window.devicePixelRatio}px)`;
+cloudCanvas.canvas.style.filter = `blur(${4 / window.devicePixelRatio}px)`;
 
 // populate the waves array
 let waves = [];
@@ -260,23 +290,7 @@ for (let i = 0; i < 35; i++) {
 let clouds = new CloudBank();
 
 // add a listener to redraw and recalculate most of the scene on resize (slightly expensive, but guarantees a good visual on resize)
-window.addEventListener('resize', ()=>{
-  // reset window dimension/scale vars
-  _w = window.innerWidth;
-  _h = window.innerHeight;
-  _scale = _w / 1500;
-
-  // reset all canvas dimensions
-  rayCanvas.canvas.width = _w;
-  rayCanvas.canvas.height = _h;
-  seaCanvas.canvas.width = _w;
-  seaCanvas.canvas.height = _h;
-  cloudCanvas.canvas.width = _w;
-  cloudCanvas.canvas.height = _h;
-
-  // essentially reinitializes the cloud bank
-  clouds.recreateCloudBank();
-})
+window.addEventListener('resize', ()=>{ window.location.reload(); })
 
 /*****************************************/
 /*                                       */
